@@ -45,7 +45,6 @@ def affine_forward(x, w, b):
 
     # reshape input into rows
     output = x.reshape([N, -1]).dot(w) + b
-
     cache = (x, w, b)
 
     return output, cache
@@ -69,3 +68,31 @@ def affine_backward(d_output, cache):
     d_b = np.sum(d_output, axis=0)
 
     return d_x, d_w, d_b
+
+
+def relu_forward(x):
+    """
+        input:
+            - inputs (x): (N, d_1, ..., d_k)
+        return:
+            - output: (N, d_1, ..., d_k)
+            - cache: x
+    """
+    output = np.fmax(x, 0)
+    cache = x
+
+    return output, cache
+
+
+def relu_backward(d_output, cache):
+    """
+        input:
+            - upstream derivative (d_output): (N, d_1, ..., d_k)
+            - cache for x (cache): (N, d_1, ..., d_k)
+        return:
+            - d_x: gradient with respect to x
+    """
+    x = cache
+    d_x = np.sign(np.fmax(x, 0)) * d_output
+
+    return d_x

@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from layer import affine_forward, affine_backward
+from layer import affine_backward, affine_forward, relu_backward, relu_forward
 
 
 def eval_numerical_gradient_array(f, x, df, h=1e-5):
@@ -36,7 +36,12 @@ def rel_error(x, y):
 
 class LayerTest(unittest.TestCase):
     def test(self):
-        # Test the affine_forward function
+        self.affine_forward()
+        self.affine_backward()
+        self.relu_forward()
+        self.relu_backward()
+
+    def affine_forward(self):
         num_inputs = 2
         input_shape = (4, 5, 6)
         output_dim = 3
@@ -60,13 +65,13 @@ class LayerTest(unittest.TestCase):
         correct_out = np.array([[1.49834967,  1.70660132,  1.91485297],
                                 [3.25553199,  3.5141327,   3.77273342]])
 
-        # Compare output with ours. The error should be around 1e-9.
+        # The error should be around 1e-9.
         error = rel_error(output, correct_out)
         print('Testing affine_forward function:')
         # print('difference: ', error)
         self.assertAlmostEqual(error, 0)
 
-        # Test the affine_backward function
+    def affine_backward(self):
         np.random.seed(231)
         x = np.random.randn(10, 2, 3)
         w = np.random.randn(6, 5)
@@ -92,6 +97,35 @@ class LayerTest(unittest.TestCase):
         self.assertAlmostEqual(rel_error(dx_num, dx), 1e-10)
         self.assertAlmostEqual(rel_error(dw_num, dw), 1e-10)
         self.assertAlmostEqual(rel_error(db_num, db), 1e-10)
+
+    def relu_forward(self):
+        x = np.linspace(-0.5, 0.5, num=12).reshape(3, 4)
+
+        output, _ = relu_forward(x)
+        correct_output = np.array([
+            [0., 0., 0., 0.],
+            [0., 0., 0.04545455, 0.13636364],
+            [0.22727273, 0.31818182, 0.40909091, 0.5]
+        ])
+
+        # The error should be around 5e-8
+        print('Testing relu_forward function:')
+        self.assertAlmostEqual(rel_error(output, correct_output), 5e-8)
+
+    def relu_backward(self):
+        np.random.seed(231)
+        x = np.random.rand(10, 10)
+        d_output = np.random.rand(*x.shape)
+
+        dx_num = eval_numerical_gradient_array(
+            lambda x: relu_forward(x)[0], x, d_output)
+
+        _, cache = relu_forward(x)
+        dx = relu_backward(d_output, cache)
+
+        # The error should be arround 3e-12
+        print('Testing relu_backward function:')
+        self.assertAlmostEqual(rel_error(dx_num, dx), 3e-12)
 
 
 if __name__ == '__main__':
